@@ -1,44 +1,74 @@
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 
-// Remember to include ALL the necessary headers!
 #include <iostream>
-#include <boost/program_options.hpp>
+#include <vector>
+#include <fstream>
+#include <chrono>
 
-// By convention, C++ header files use the `.hpp` extension. `.h` is OK too.
-#include "arithmetic/arithmetic.hpp"
+#include "vector/my_vector.h"
 
-int main(int argc, char **argv) {
-    int variable_a, variable_b;
+using namespace std::chrono;
 
-    namespace po = boost::program_options;
 
-    po::options_description visible("Supported options");
-    visible.add_options()
-            ("help,h", "Print this help message.");
+template<typename container>
+void count(container data_out, const std::string &file_name) {
+    std::ifstream data{"../data/data.txt"};
 
-    po::options_description hidden("Hidden options");
-    hidden.add_options()
-            ("a", po::value<int>(&variable_a)->default_value(0), "Variable A.")
-            ("b", po::value<int>(&variable_b)->default_value(0), "Variable B.");
-
-    po::positional_options_description p;
-    p.add("a", 1);
-    p.add("b", 1);
-
-    po::options_description all("All options");
-    all.add(visible).add(hidden);
-
-    po::variables_map vm;
-    po::store(po::command_line_parser(argc, argv).options(all).positional(p).run(), vm);
-    po::notify(vm);
-
-    if (vm.count("help")) {
-        std::cout << "Usage:\n  add [a] [b]\n" << visible << std::endl;
-        return EXIT_SUCCESS;
+    if (!data) {
+        std::cerr << "Cannot open file" << std::endl;
+        exit(EXIT_FAILURE);
     }
 
-    int result = arithmetic::add(variable_a, variable_b);
-    std::cout << result << std::endl;
+    std::string word;
+    std::unordered_map<std::string, size_t> words_count;
+
+    while (data >> word)
+        ++words_count[word];
+
+    std::ofstream out{file_name};
+
+
+    data_out.reserve(words_count.size());
+
+    std::sort(data_out.begin(), data_out.end());
+
+    for (auto &&kw: words_count)
+        data_out.emplace_back(std::move(kw));
+
+    for (auto &&elem: data_out)
+        out << elem.first << "\t:\t" << elem.second << '\n';
+}
+
+constexpr int TESTS_AMOUNT = 50;
+int main() {
+
+    my_vector<std::pair<std::string, size_t>> my_vct;
+    std::string file1 = "../data/res1.txt";
+
+    std::vector<std::pair<std::string, size_t>> vct;
+    std::string file2 = "../data/res2.txt";
+
+    long avg1 = 0, avg2 = 0;
+
+
+    for(int i = 0; i < TESTS_AMOUNT; i++) {
+        auto start = high_resolution_clock::now();
+        count(my_vct, file1);
+        auto stop = high_resolution_clock::now();
+        avg1 += duration_cast<microseconds>(stop - start).count();
+
+        start = high_resolution_clock::now();
+        count(vct, file2);
+        stop = high_resolution_clock::now();
+        avg2 += duration_cast<microseconds>(stop - start).count();
+    }
+
+    avg1 /= TESTS_AMOUNT;
+    avg2 /= TESTS_AMOUNT;
+
+    std::cout << "My vector: " << avg1 << '\n'
+        << "STD vector: " << avg2 << std::endl;
+
     return EXIT_SUCCESS;
 }
