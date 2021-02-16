@@ -1,9 +1,3 @@
-# Lab 2 Option 3: Adder
-
-## Team
-
- - [Volodymyr Chernetskyi](https://github.com/chernetskyi)
-
 ## Prerequisites
 
  - **C++ compiler** - needs to support **C++17** standard
@@ -33,13 +27,5 @@ Dependencies (such as development libraries) can be found in the [dependencies f
     cmake -Bbuild
     cmake --build build
     ```
-
-## Usage
-
-```bash
-add [a] [b]
-```
-
-If less than two numbers provided, zeroes are used instead. If more - an error occurs.
 
 Help flags `-h`/`--help` support is available.
